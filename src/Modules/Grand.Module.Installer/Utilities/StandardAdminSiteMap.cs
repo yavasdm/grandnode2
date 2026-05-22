@@ -624,6 +624,33 @@ public static class StandardAdminSiteMap
                     ActionName = "Customer",
                     DisplayOrder = 4,
                     IconClass = "fa fa-dot-circle-o"
+                },
+                new() {
+                    SystemName = "Category revenue report",
+                    ResourceName = "Admin.Reports.CategoryRevenue",
+                    PermissionNames = new List<string> { PermissionSystemName.Reports },
+                    ControllerName = "Reports",
+                    ActionName = "CategoryRevenueReport",
+                    DisplayOrder = 5,
+                    IconClass = "fa fa-dot-circle-o"
+                },
+                new() {
+                    SystemName = "New vs returning customers report",
+                    ResourceName = "Admin.Reports.NewVsReturning",
+                    PermissionNames = new List<string> { PermissionSystemName.Reports },
+                    ControllerName = "Reports",
+                    ActionName = "NewVsReturningReport",
+                    DisplayOrder = 6,
+                    IconClass = "fa fa-dot-circle-o"
+                },
+                new() {
+                    SystemName = "Vendor performance report",
+                    ResourceName = "Admin.Reports.VendorPerformance",
+                    PermissionNames = new List<string> { PermissionSystemName.Reports },
+                    ControllerName = "Reports",
+                    ActionName = "VendorPerformanceReport",
+                    DisplayOrder = 7,
+                    IconClass = "fa fa-dot-circle-o"
                 }
             }
         },
