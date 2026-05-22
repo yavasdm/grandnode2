@@ -1,3 +1,4 @@
+using Grand.Business.Core.Enums;
 using Grand.Business.Core.Interfaces.Common.Directory;
 using Grand.Business.Core.Interfaces.System.Reports;
 using Grand.Business.Core.Utilities.System;
@@ -570,6 +571,70 @@ public class OrderReportService : IOrderReportService
         public int Day { get; set; }
         public int Count { get; set; }
         public double Amount { get; set; }
+    }
+
+    /// <inheritdoc />
+    public virtual async Task<IList<CategoryRevenueReportLine>> GetCategoryRevenueReport(
+        string storeId = "",
+        DateTime? startTimeUtc = null,
+        DateTime? endTimeUtc = null,
+        int? os = null,
+        PaymentStatus? ps = null)
+    {
+        var query = from p in _orderRepository.Table select p;
+        query = query.Where(o => !o.Deleted);
+        if (!string.IsNullOrEmpty(storeId))
+            query = query.Where(o => o.StoreId == storeId);
+        if (os.HasValue)
+            query = query.Where(o => o.OrderStatusId == os.Value);
+        if (ps.HasValue)
+            query = query.Where(o => o.PaymentStatusId == ps.Value);
+        if (startTimeUtc.HasValue)
+            query = query.Where(o => startTimeUtc.Value <= o.CreatedOnUtc);
+        if (endTimeUtc.HasValue)
+            query = query.Where(o => endTimeUtc.Value >= o.CreatedOnUtc);
+
+        var orderItems = (from order in query
+            from item in order.OrderItems
+            select new { item.ProductId, item.PriceExclTax })
+            .ToList();
+
+        if (!orderItems.Any())
+            return new List<CategoryRevenueReportLine>();
+
+        var productIds = orderItems.Select(x => x.ProductId).Distinct().ToList();
+        var products = (from p in _productRepository.Table
+            where productIds.Contains(p.Id)
+            select new { p.Id, p.ProductCategories })
+            .ToList();
+
+        var productCategoryMap = products.ToDictionary(
+            p => p.Id,
+            p => p.ProductCategories.Select(c => c.CategoryId).ToList() as IList<string>);
+
+        var categoryRevenue = new Dictionary<string, (double Revenue, int Orders)>();
+        foreach (var item in orderItems)
+        {
+            if (!productCategoryMap.TryGetValue(item.ProductId, out var categoryIds))
+                continue;
+            foreach (var categoryId in categoryIds)
+            {
+                if (!categoryRevenue.ContainsKey(categoryId))
+                    categoryRevenue[categoryId] = (0, 0);
+                categoryRevenue[categoryId] = (
+                    categoryRevenue[categoryId].Revenue + item.PriceExclTax,
+                    categoryRevenue[categoryId].Orders + 1);
+            }
+        }
+
+        return await Task.FromResult(categoryRevenue
+            .Select(kvp => new CategoryRevenueReportLine {
+                CategoryId = kvp.Key,
+                TotalRevenue = kvp.Value.Revenue,
+                TotalOrders = kvp.Value.Orders
+            })
+            .OrderByDescending(x => x.TotalRevenue)
+            .ToList());
     }
 
     #endregion
