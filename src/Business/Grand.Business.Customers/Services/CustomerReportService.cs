@@ -249,6 +249,7 @@ public class CustomerReportService : ICustomerReportService
     {
         var query = from o in _orderRepository.Table select o;
         query = query.Where(o => !o.Deleted);
+        query = query.Where(o => o.OrderStatusId != (int)OrderStatusSystem.Cancelled);
         if (!string.IsNullOrEmpty(storeId))
             query = query.Where(o => o.StoreId == storeId);
         if (startTimeUtc.HasValue)
@@ -268,6 +269,7 @@ public class CustomerReportService : ICustomerReportService
         // Customers who placed any order before the start of the period are "returning"
         var priorQuery = from o in _orderRepository.Table select o;
         priorQuery = priorQuery.Where(o => !o.Deleted);
+        priorQuery = priorQuery.Where(o => o.OrderStatusId != (int)OrderStatusSystem.Cancelled);
         if (!string.IsNullOrEmpty(storeId))
             priorQuery = priorQuery.Where(o => o.StoreId == storeId);
         if (startTimeUtc.HasValue)
