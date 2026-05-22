@@ -263,6 +263,8 @@ public class CustomerReportService : ICustomerReportService
         if (!ordersInPeriod.Any())
             return new List<NewVsReturningReportLine>();
 
+        // When startTimeUtc is null there is no period start, so all historical orders are prior
+        // history — every customer appears as "returning" and no customer will be "new".
         // Customers who placed any order before the start of the period are "returning"
         var priorQuery = from o in _orderRepository.Table select o;
         priorQuery = priorQuery.Where(o => !o.Deleted);
@@ -271,10 +273,8 @@ public class CustomerReportService : ICustomerReportService
         if (startTimeUtc.HasValue)
             priorQuery = priorQuery.Where(o => o.CreatedOnUtc < startTimeUtc.Value);
 
-        var priorCustomerIds = priorQuery
-            .Select(o => o.CustomerId)
-            .Distinct()
-            .ToHashSet();
+        var priorCustomerIds = new HashSet<string>(
+            priorQuery.Select(o => o.CustomerId).Distinct().ToList());
 
         var result = ordersInPeriod
             .GroupBy(o => GetPeriodKey(o.CreatedOnUtc, groupBy))
@@ -297,7 +297,7 @@ public class CustomerReportService : ICustomerReportService
     {
         return groupBy switch {
             ReportGroupBy.Day => date.ToString("yyyy-MM-dd"),
-            ReportGroupBy.Week => $"{date.Year}-W{ISOWeek.GetWeekOfYear(date):D2}",
+            ReportGroupBy.Week => $"{ISOWeek.GetYear(date)}-W{ISOWeek.GetWeekOfYear(date):D2}",
             _ => date.ToString("yyyy-MM")
         };
     }
