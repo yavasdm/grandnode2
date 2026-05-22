@@ -11,7 +11,6 @@ using Grand.Business.Core.Interfaces.Common.Stores;
 using Grand.Business.Core.Interfaces.Customers;
 using Grand.Business.Core.Interfaces.System.Reports;
 using Grand.Business.Core.Utilities.System;
-using Grand.Web.AdminShared.Models.Reports;
 using Grand.Domain.Orders;
 using Grand.Domain.Payments;
 using Grand.Domain.Permissions;
@@ -23,6 +22,7 @@ using Grand.Web.AdminShared.Models.Catalog;
 using Grand.Web.AdminShared.Models.Common;
 using Grand.Web.AdminShared.Models.Customers;
 using Grand.Web.AdminShared.Models.Orders;
+using Grand.Web.AdminShared.Models.Reports;
 using Grand.Web.Common.DataSource;
 using Grand.Web.Common.Extensions;
 using Grand.Web.Common.Localization;
@@ -698,6 +698,9 @@ public class ReportsController : BaseAdminController
     [HttpPost]
     public async Task<IActionResult> CategoryRevenueReportList(DataSourceRequest command, CategoryRevenueReportModel model)
     {
+        if (!await _permissionService.Authorize(StandardPermission.ManageOrders))
+            return Content("");
+
         DateTime? startDateValue = model.StartDate == null
             ? null
             : _dateTimeService.ConvertToUtcTime(model.StartDate.Value, _dateTimeService.CurrentTimeZone);
@@ -763,6 +766,9 @@ public class ReportsController : BaseAdminController
     [HttpPost]
     public async Task<IActionResult> NewVsReturningReportList(DataSourceRequest command, NewVsReturningReportModel model)
     {
+        if (!await _permissionService.Authorize(StandardPermission.ManageCustomers))
+            return Content("");
+
         DateTime? startDateValue = model.StartDate == null
             ? null
             : _dateTimeService.ConvertToUtcTime(model.StartDate.Value, _dateTimeService.CurrentTimeZone);
@@ -824,6 +830,9 @@ public class ReportsController : BaseAdminController
     [HttpPost]
     public async Task<IActionResult> VendorPerformanceReportList(DataSourceRequest command, VendorPerformanceReportModel model)
     {
+        if (!await _permissionService.Authorize(StandardPermission.ManageOrders))
+            return Content("");
+
         DateTime? startDateValue = model.StartDate == null
             ? null
             : _dateTimeService.ConvertToUtcTime(model.StartDate.Value, _dateTimeService.CurrentTimeZone);
