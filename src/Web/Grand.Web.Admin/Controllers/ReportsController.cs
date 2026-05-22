@@ -1,4 +1,6 @@
-﻿using Grand.Business.Core.Interfaces.Catalog.Directory;
+﻿using Grand.Business.Core.Enums;
+using Grand.Business.Core.Interfaces.Catalog.Categories;
+using Grand.Business.Core.Interfaces.Catalog.Directory;
 using Grand.Business.Core.Interfaces.Catalog.Prices;
 using Grand.Business.Core.Interfaces.Catalog.Products;
 using Grand.Business.Core.Interfaces.Checkout.Orders;
@@ -9,6 +11,7 @@ using Grand.Business.Core.Interfaces.Common.Stores;
 using Grand.Business.Core.Interfaces.Customers;
 using Grand.Business.Core.Interfaces.System.Reports;
 using Grand.Business.Core.Utilities.System;
+using Grand.Web.AdminShared.Models.Reports;
 using Grand.Domain.Orders;
 using Grand.Domain.Payments;
 using Grand.Domain.Permissions;
@@ -50,6 +53,8 @@ public class ReportsController : BaseAdminController
     private readonly IStoreService _storeService;
     private readonly ITranslationService _translationService;
     private readonly IVendorService _vendorService;
+    private readonly IVendorReportService _vendorReportService;
+    private readonly ICategoryService _categoryService;
     private readonly IContextAccessor _contextAccessor;
     private readonly IEnumTranslationService _enumTranslationService;
     public ReportsController(IOrderService orderService,
@@ -71,7 +76,9 @@ public class ReportsController : BaseAdminController
         ISearchTermService searchTermService,
         IOrderStatusService orderStatusService,
         ICurrencyService currencyService,
-        IEnumTranslationService enumTranslationService)
+        IEnumTranslationService enumTranslationService,
+        IVendorReportService vendorReportService,
+        ICategoryService categoryService)
     {
         _orderService = orderService;
         _orderReportService = orderReportService;
@@ -93,6 +100,8 @@ public class ReportsController : BaseAdminController
         _orderStatusService = orderStatusService;
         _currencyService = currencyService;
         _enumTranslationService = enumTranslationService;
+        _vendorReportService = vendorReportService;
+        _categoryService = categoryService;
     }
 
     [NonAction]
@@ -655,6 +664,198 @@ public class ReportsController : BaseAdminController
             Data = model
         };
         return Json(gridModel);
+    }
+
+    #endregion
+
+    #region Category Revenue Report
+
+    public async Task<IActionResult> CategoryRevenueReport()
+    {
+        if (!await _permissionService.Authorize(StandardPermission.ManageOrders))
+            return AccessDeniedView();
+
+        var status = await _orderStatusService.GetAll();
+        var model = new CategoryRevenueReportModel {
+            AvailableOrderStatuses =
+                status.Select(x => new SelectListItem { Value = x.StatusId.ToString(), Text = x.Name }).ToList()
+        };
+        model.AvailableOrderStatuses.Insert(0,
+            new SelectListItem { Text = _translationService.GetResource("Admin.Common.All"), Value = "" });
+
+        model.AvailablePaymentStatuses = _enumTranslationService.ToSelectList(PaymentStatus.Pending, false).ToList();
+        model.AvailablePaymentStatuses.Insert(0,
+            new SelectListItem { Text = _translationService.GetResource("Admin.Common.All"), Value = "" });
+
+        var stores = await _storeService.GetAllStores();
+        model.AvailableStores = stores.Select(s => new SelectListItem { Value = s.Id, Text = s.Shortcut }).ToList();
+        model.AvailableStores.Insert(0,
+            new SelectListItem { Text = _translationService.GetResource("Admin.Common.All"), Value = "" });
+
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CategoryRevenueReportList(DataSourceRequest command, CategoryRevenueReportModel model)
+    {
+        DateTime? startDateValue = model.StartDate == null
+            ? null
+            : _dateTimeService.ConvertToUtcTime(model.StartDate.Value, _dateTimeService.CurrentTimeZone);
+        DateTime? endDateValue = model.EndDate == null
+            ? null
+            : _dateTimeService.ConvertToUtcTime(model.EndDate.Value, _dateTimeService.CurrentTimeZone).AddDays(1);
+
+        int? orderStatus = model.OrderStatusId > 0 ? model.OrderStatusId : null;
+        var paymentStatus = model.PaymentStatusId > 0 ? (PaymentStatus?)model.PaymentStatusId : null;
+
+        var items = await _orderReportService.GetCategoryRevenueReport(
+            storeId: model.StoreId ?? "",
+            startTimeUtc: startDateValue,
+            endTimeUtc: endDateValue,
+            os: orderStatus,
+            ps: paymentStatus);
+
+        var totalRevenue = items.Sum(x => x.TotalRevenue);
+        var currency = await _currencyService.GetPrimaryStoreCurrency();
+
+        var result = new List<CategoryRevenueReportLineModel>();
+        foreach (var x in items)
+        {
+            var category = await _categoryService.GetCategoryById(x.CategoryId);
+            result.Add(new CategoryRevenueReportLineModel {
+                CategoryName = category?.Name ?? _translationService.GetResource("Admin.Common.Unknown"),
+                TotalOrders = x.TotalOrders,
+                TotalRevenue = _priceFormatter.FormatPrice(x.TotalRevenue, currency),
+                RevenuePercent = totalRevenue > 0
+                    ? $"{(x.TotalRevenue / totalRevenue * 100):F1}%"
+                    : "0.0%"
+            });
+        }
+
+        return Json(new DataSourceResult { Data = result, Total = result.Count });
+    }
+
+    #endregion
+
+    #region New vs Returning Report
+
+    public async Task<IActionResult> NewVsReturningReport()
+    {
+        if (!await _permissionService.Authorize(StandardPermission.ManageCustomers))
+            return AccessDeniedView();
+
+        var model = new NewVsReturningReportModel {
+            AvailableGroupByOptions = new List<SelectListItem> {
+                new() { Value = "0", Text = _translationService.GetResource("Admin.Reports.NewVsReturning.GroupBy.Day") },
+                new() { Value = "1", Text = _translationService.GetResource("Admin.Reports.NewVsReturning.GroupBy.Week") },
+                new() { Value = "2", Text = _translationService.GetResource("Admin.Reports.NewVsReturning.GroupBy.Month"), Selected = true }
+            }
+        };
+
+        var stores = await _storeService.GetAllStores();
+        model.AvailableStores = stores.Select(s => new SelectListItem { Value = s.Id, Text = s.Shortcut }).ToList();
+        model.AvailableStores.Insert(0,
+            new SelectListItem { Text = _translationService.GetResource("Admin.Common.All"), Value = "" });
+
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> NewVsReturningReportList(DataSourceRequest command, NewVsReturningReportModel model)
+    {
+        DateTime? startDateValue = model.StartDate == null
+            ? null
+            : _dateTimeService.ConvertToUtcTime(model.StartDate.Value, _dateTimeService.CurrentTimeZone);
+        DateTime? endDateValue = model.EndDate == null
+            ? null
+            : _dateTimeService.ConvertToUtcTime(model.EndDate.Value, _dateTimeService.CurrentTimeZone).AddDays(1);
+
+        var groupBy = (ReportGroupBy)model.GroupById;
+
+        var items = await _customerReportService.GetNewVsReturningReport(
+            storeId: model.StoreId ?? "",
+            startTimeUtc: startDateValue,
+            endTimeUtc: endDateValue,
+            groupBy: groupBy);
+
+        var result = items.Select(x =>
+        {
+            var total = x.NewCustomers + x.ReturningCustomers;
+            return new NewVsReturningReportLineModel {
+                TimePeriod = x.TimePeriod,
+                NewCustomers = x.NewCustomers,
+                ReturningCustomers = x.ReturningCustomers,
+                NewPercent = total > 0 ? $"{(x.NewCustomers * 100.0 / total):F1}%" : "0.0%"
+            };
+        }).ToList();
+
+        return Json(new DataSourceResult { Data = result, Total = result.Count });
+    }
+
+    #endregion
+
+    #region Vendor Performance Report
+
+    public async Task<IActionResult> VendorPerformanceReport()
+    {
+        if (!await _permissionService.Authorize(StandardPermission.ManageOrders))
+            return AccessDeniedView();
+
+        var status = await _orderStatusService.GetAll();
+        var model = new VendorPerformanceReportModel {
+            AvailableOrderStatuses =
+                status.Select(x => new SelectListItem { Value = x.StatusId.ToString(), Text = x.Name }).ToList()
+        };
+        model.AvailableOrderStatuses.Insert(0,
+            new SelectListItem { Text = _translationService.GetResource("Admin.Common.All"), Value = "" });
+
+        model.AvailablePaymentStatuses = _enumTranslationService.ToSelectList(PaymentStatus.Pending, false).ToList();
+        model.AvailablePaymentStatuses.Insert(0,
+            new SelectListItem { Text = _translationService.GetResource("Admin.Common.All"), Value = "" });
+
+        var stores = await _storeService.GetAllStores();
+        model.AvailableStores = stores.Select(s => new SelectListItem { Value = s.Id, Text = s.Shortcut }).ToList();
+        model.AvailableStores.Insert(0,
+            new SelectListItem { Text = _translationService.GetResource("Admin.Common.All"), Value = "" });
+
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> VendorPerformanceReportList(DataSourceRequest command, VendorPerformanceReportModel model)
+    {
+        DateTime? startDateValue = model.StartDate == null
+            ? null
+            : _dateTimeService.ConvertToUtcTime(model.StartDate.Value, _dateTimeService.CurrentTimeZone);
+        DateTime? endDateValue = model.EndDate == null
+            ? null
+            : _dateTimeService.ConvertToUtcTime(model.EndDate.Value, _dateTimeService.CurrentTimeZone).AddDays(1);
+
+        int? orderStatus = model.OrderStatusId > 0 ? model.OrderStatusId : null;
+        var paymentStatus = model.PaymentStatusId > 0 ? (PaymentStatus?)model.PaymentStatusId : null;
+
+        var items = await _vendorReportService.GetVendorPerformanceReport(
+            storeId: model.StoreId ?? "",
+            startTimeUtc: startDateValue,
+            endTimeUtc: endDateValue,
+            os: orderStatus,
+            ps: paymentStatus);
+
+        var currency = await _currencyService.GetPrimaryStoreCurrency();
+
+        var result = new List<VendorPerformanceReportLineModel>();
+        foreach (var x in items)
+        {
+            var vendor = await _vendorService.GetVendorById(x.VendorId);
+            result.Add(new VendorPerformanceReportLineModel {
+                VendorName = vendor?.Name ?? _translationService.GetResource("Admin.Common.Unknown"),
+                TotalOrders = x.TotalOrders,
+                TotalRevenue = _priceFormatter.FormatPrice(x.TotalRevenue, currency),
+                AverageOrderValue = _priceFormatter.FormatPrice(x.AverageOrderValue, currency)
+            });
+        }
+
+        return Json(new DataSourceResult { Data = result, Total = result.Count });
     }
 
     #endregion
