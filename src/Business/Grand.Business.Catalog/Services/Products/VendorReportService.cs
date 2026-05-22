@@ -16,6 +16,7 @@ public class VendorReportService : IVendorReportService
     }
 
     public virtual async Task<IList<VendorPerformanceReportLine>> GetVendorPerformanceReport(
+        string storeId = "",
         DateTime? startTimeUtc = null,
         DateTime? endTimeUtc = null,
         int? os = null,
@@ -23,6 +24,8 @@ public class VendorReportService : IVendorReportService
     {
         var query = from o in _orderRepository.Table select o;
         query = query.Where(o => !o.Deleted);
+        if (!string.IsNullOrEmpty(storeId))
+            query = query.Where(o => o.StoreId == storeId);
         if (os.HasValue)
             query = query.Where(o => o.OrderStatusId == os.Value);
         if (ps.HasValue)

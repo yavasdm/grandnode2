@@ -21,7 +21,8 @@ public class VendorPerformanceReportLine
     public int TotalOrders { get; set; }
 
     /// <summary>
-    ///     Gets or sets the average value of orders fulfilled by the vendor
+    ///     Gets or sets the vendor's average revenue contribution per order (not the full order total).
+    ///     Calculated as TotalRevenue / TotalOrders where TotalOrders counts distinct orders containing this vendor's items.
     /// </summary>
     public double AverageOrderValue { get; set; }
 }
