@@ -3,10 +3,11 @@ using Grand.Business.Core.Interfaces.Catalog.Products;
 using Grand.Business.Core.Interfaces.Common.Directory;
 using Grand.Business.Core.Interfaces.Common.Localization;
 using Grand.Business.Core.Interfaces.Marketing.Courses;
-using Grand.Domain.Permissions;
 using Grand.Domain.Courses;
+using Grand.Domain.Permissions;
 using Grand.Infrastructure;
 using Grand.Web.Admin.Extensions;
+using Grand.Web.AdminShared.Extensions;
 using Grand.Web.AdminShared.Extensions.Mapping;
 using Grand.Web.AdminShared.Interfaces;
 using Grand.Web.AdminShared.Models.Courses;
@@ -15,7 +16,6 @@ using Grand.Web.Common.Extensions;
 using Grand.Web.Common.Filters;
 using Grand.Web.Common.Security.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Grand.Web.AdminShared.Extensions;
 
 namespace Grand.Web.Admin.Controllers;
 
