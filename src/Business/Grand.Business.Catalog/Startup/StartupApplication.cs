@@ -75,6 +75,7 @@ public class StartupApplication : IStartupApplication
         serviceCollection.AddScoped<IPricingService, PricingService>();
         serviceCollection.AddScoped<ISearchTermService, SearchTermService>();
         serviceCollection.AddScoped<IMeasureService, MeasureService>();
+        serviceCollection.AddScoped<IVendorReportService, VendorReportService>();
     }
 
     private static void RegisterDiscountsService(IServiceCollection serviceCollection)
