@@ -1,0 +1,21 @@
+using Grand.Business.Core.Utilities.System;
+using Grand.Domain.Payments;
+
+namespace Grand.Business.Core.Interfaces.System.Reports;
+
+public interface IVendorReportService
+{
+    /// <summary>
+    ///     Get vendor performance report
+    /// </summary>
+    /// <param name="startTimeUtc">Start date</param>
+    /// <param name="endTimeUtc">End date</param>
+    /// <param name="os">Order status</param>
+    /// <param name="ps">Payment status</param>
+    /// <returns>Result</returns>
+    Task<IList<VendorPerformanceReportLine>> GetVendorPerformanceReport(
+        DateTime? startTimeUtc = null,
+        DateTime? endTimeUtc = null,
+        int? os = null,
+        PaymentStatus? ps = null);
+}

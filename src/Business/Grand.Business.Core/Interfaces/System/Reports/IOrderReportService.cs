@@ -1,3 +1,4 @@
+using Grand.Business.Core.Enums;
 using Grand.Business.Core.Utilities.System;
 using Grand.Domain;
 using Grand.Domain.Catalog;
@@ -136,4 +137,20 @@ public interface IOrderReportService
     Task<IPagedList<Product>> ProductsNeverSold(string storeId = "", string vendorId = "",
         DateTime? createdFromUtc = null, DateTime? createdToUtc = null,
         int pageIndex = 0, int pageSize = int.MaxValue, bool showHidden = false);
+
+    /// <summary>
+    ///     Get revenue grouped by product category
+    /// </summary>
+    /// <param name="storeId">Store identifier; "" to load all records</param>
+    /// <param name="startTimeUtc">Start date</param>
+    /// <param name="endTimeUtc">End date</param>
+    /// <param name="os">Order status</param>
+    /// <param name="ps">Payment status</param>
+    /// <returns>Result</returns>
+    Task<IList<CategoryRevenueReportLine>> GetCategoryRevenueReport(
+        string storeId = "",
+        DateTime? startTimeUtc = null,
+        DateTime? endTimeUtc = null,
+        int? os = null,
+        PaymentStatus? ps = null);
 }
