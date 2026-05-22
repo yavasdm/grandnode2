@@ -1,4 +1,3 @@
-using Grand.Business.Core.Enums;
 using Grand.Business.Core.Interfaces.Common.Directory;
 using Grand.Business.Core.Interfaces.System.Reports;
 using Grand.Business.Core.Utilities.System;
@@ -596,7 +595,7 @@ public class OrderReportService : IOrderReportService
 
         var orderItems = (from order in query
             from item in order.OrderItems
-            select new { item.ProductId, item.PriceExclTax })
+            select new { item.ProductId, item.PriceExclTax, OrderId = order.Id })
             .ToList();
 
         if (!orderItems.Any())
@@ -608,11 +607,13 @@ public class OrderReportService : IOrderReportService
             select new { p.Id, p.ProductCategories })
             .ToList();
 
-        var productCategoryMap = products.ToDictionary(
-            p => p.Id,
-            p => p.ProductCategories.Select(c => c.CategoryId).ToList() as IList<string>);
+        var productCategoryMap = products
+            .GroupBy(p => p.Id)
+            .ToDictionary(
+                g => g.Key,
+                g => (IList<string>)g.First().ProductCategories.Select(c => c.CategoryId).ToList());
 
-        var categoryRevenue = new Dictionary<string, (double Revenue, int Orders)>();
+        var categoryRevenue = new Dictionary<string, (double Revenue, HashSet<string> OrderIds)>();
         foreach (var item in orderItems)
         {
             if (!productCategoryMap.TryGetValue(item.ProductId, out var categoryIds))
@@ -620,10 +621,10 @@ public class OrderReportService : IOrderReportService
             foreach (var categoryId in categoryIds)
             {
                 if (!categoryRevenue.ContainsKey(categoryId))
-                    categoryRevenue[categoryId] = (0, 0);
-                categoryRevenue[categoryId] = (
-                    categoryRevenue[categoryId].Revenue + item.PriceExclTax,
-                    categoryRevenue[categoryId].Orders + 1);
+                    categoryRevenue[categoryId] = (0, new HashSet<string>());
+                var current = categoryRevenue[categoryId];
+                categoryRevenue[categoryId] = (current.Revenue + item.PriceExclTax, current.OrderIds);
+                current.OrderIds.Add(item.OrderId);
             }
         }
 
@@ -631,7 +632,7 @@ public class OrderReportService : IOrderReportService
             .Select(kvp => new CategoryRevenueReportLine {
                 CategoryId = kvp.Key,
                 TotalRevenue = kvp.Value.Revenue,
-                TotalOrders = kvp.Value.Orders
+                TotalOrders = kvp.Value.OrderIds.Count
             })
             .OrderByDescending(x => x.TotalRevenue)
             .ToList());
