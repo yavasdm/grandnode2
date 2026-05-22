@@ -21,6 +21,7 @@ public class VendorPerformanceReportModel : BaseModel
     [GrandResourceDisplayName("Admin.Reports.VendorPerformance.PaymentStatus")]
     public int PaymentStatusId { get; set; }
 
+    [GrandResourceDisplayName("Admin.Reports.VendorPerformance.Store")]
     public string StoreId { get; set; }
 
     public IList<SelectListItem> AvailableOrderStatuses { get; set; } = new List<SelectListItem>();

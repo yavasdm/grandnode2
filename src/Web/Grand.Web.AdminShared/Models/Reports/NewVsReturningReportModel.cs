@@ -19,6 +19,7 @@ public class NewVsReturningReportModel : BaseModel
     [GrandResourceDisplayName("Admin.Reports.NewVsReturning.GroupBy")]
     public int GroupById { get; set; } = (int)ReportGroupBy.Month;
 
+    [GrandResourceDisplayName("Admin.Reports.NewVsReturning.Store")]
     public string StoreId { get; set; }
 
     public IList<SelectListItem> AvailableGroupByOptions { get; set; } = new List<SelectListItem>();

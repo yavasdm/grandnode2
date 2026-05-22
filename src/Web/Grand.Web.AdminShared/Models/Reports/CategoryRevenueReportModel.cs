@@ -21,6 +21,7 @@ public class CategoryRevenueReportModel : BaseModel
     [GrandResourceDisplayName("Admin.Reports.CategoryRevenue.PaymentStatus")]
     public int PaymentStatusId { get; set; }
 
+    [GrandResourceDisplayName("Admin.Reports.CategoryRevenue.Store")]
     public string StoreId { get; set; }
 
     public IList<SelectListItem> AvailableOrderStatuses { get; set; } = new List<SelectListItem>();
