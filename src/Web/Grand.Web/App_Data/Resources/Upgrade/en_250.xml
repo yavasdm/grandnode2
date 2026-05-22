@@ -3,6 +3,9 @@
 	<Resource Name="Admin.Reports.CategoryRevenue" Area="Admin">
 		<Value>Category Revenue</Value>
 	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.RunReport" Area="Admin">
+		<Value>Run Report</Value>
+	</Resource>
 	<Resource Name="Admin.Reports.CategoryRevenue.StartDate" Area="Admin">
 		<Value>Start Date</Value>
 	</Resource>
@@ -42,6 +45,18 @@
 	<Resource Name="Admin.Reports.NewVsReturning.GroupBy" Area="Admin">
 		<Value>Group By</Value>
 	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.GroupBy.Day" Area="Admin">
+		<Value>Day</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.GroupBy.Week" Area="Admin">
+		<Value>Week</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.GroupBy.Month" Area="Admin">
+		<Value>Month</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.RunReport" Area="Admin">
+		<Value>Run Report</Value>
+	</Resource>
 	<Resource Name="Admin.Reports.NewVsReturning.Store" Area="Admin">
 		<Value>Store</Value>
 	</Resource>
@@ -59,6 +74,9 @@
 	</Resource>
 	<Resource Name="Admin.Reports.VendorPerformance" Area="Admin">
 		<Value>Vendor Performance</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.RunReport" Area="Admin">
+		<Value>Run Report</Value>
 	</Resource>
 	<Resource Name="Admin.Reports.VendorPerformance.StartDate" Area="Admin">
 		<Value>Start Date</Value>

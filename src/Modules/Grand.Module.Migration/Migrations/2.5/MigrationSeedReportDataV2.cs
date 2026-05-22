@@ -12,12 +12,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Grand.Module.Migration.Migrations._2._5;
 
-public class MigrationSeedReportData : IMigration
+public class MigrationSeedReportDataV2 : IMigration
 {
-    public int Priority => 10;
+    public int Priority => 20;
     public DbVersion Version => new(2, 5);
-    public Guid Identity => new("F2A85C34-7E19-4B62-DC08-93A1E74F6B20");
-    public string Name => "Seed sample orders for reports";
+    public Guid Identity => new("D4E5F6A7-B8C9-4D0E-1F2A-3B4C5D6E7F81");
+    public string Name => "Seed sample orders for reports V2";
 
     public bool UpgradeProcess(IServiceProvider serviceProvider)
     {
@@ -26,33 +26,57 @@ public class MigrationSeedReportData : IMigration
         var categoryRepository = serviceProvider.GetRequiredService<IRepository<Category>>();
         var vendorRepository = serviceProvider.GetRequiredService<IRepository<Vendor>>();
         var customerRepository = serviceProvider.GetRequiredService<IRepository<Customer>>();
-        var logService = serviceProvider.GetRequiredService<ILogger<MigrationSeedReportData>>();
+        var logService = serviceProvider.GetRequiredService<ILogger<MigrationSeedReportDataV2>>();
 
         try
         {
-            // Skip if sample orders already exist
             if (orderRepository.Table.Any(o => o.Code == "SEED-REPORT"))
                 return true;
 
             var storeId = "";
-            var categories = categoryRepository.Table.Where(c => c.Published).Take(5).ToList();
-            var vendors = vendorRepository.Table.Where(v => v.Active && !v.Deleted).Take(3).ToList();
+            // Relaxed filters: accept any category/vendor/customer that is not deleted
+            var categories = categoryRepository.Table.Take(5).ToList();
+            var vendors = vendorRepository.Table.Where(v => !v.Deleted).Take(3).ToList();
             var customers = customerRepository.Table
-                .Where(c => !c.Deleted && c.Active && !c.IsSystemAccount && c.Email != null)
+                .Where(c => !c.Deleted && !c.IsSystemAccount)
                 .Take(10).ToList();
 
-            if (!customers.Any() || !categories.Any())
+            // Fall back to any non-deleted customer if no regular ones found
+            if (!customers.Any())
+                customers = customerRepository.Table.Where(c => !c.Deleted).Take(10).ToList();
+
+            var products = productRepository.Table
+                .Where(p => p.Published && p.Price > 0)
+                .Take(20).ToList();
+
+            if (!products.Any() || !customers.Any())
                 return true;
 
-            // Ensure we have products with categories and vendors assigned
-            var products = EnsureProducts(productRepository, categories, vendors);
+            foreach (var product in products)
+            {
+                var changed = false;
+                if (!product.ProductCategories.Any() && categories.Any())
+                {
+                    product.ProductCategories.Add(new ProductCategory {
+                        CategoryId = categories[Math.Abs(product.Id.GetHashCode()) % categories.Count].Id,
+                        DisplayOrder = 1
+                    });
+                    changed = true;
+                }
+                if (string.IsNullOrEmpty(product.VendorId) && vendors.Any())
+                {
+                    product.VendorId = vendors[Math.Abs(product.Id.GetHashCode()) % vendors.Count].Id;
+                    changed = true;
+                }
+                if (changed)
+                    productRepository.Update(product);
+            }
 
             var rng = new Random(42);
             var now = DateTime.UtcNow;
             var maxOrderNumber = orderRepository.Table.Select(o => (int?)o.OrderNumber).Max();
             var orderNumber = (maxOrderNumber ?? 0) + 1;
 
-            // Spread 60 orders across the last 6 months to give reports meaningful data
             for (var i = 0; i < 60; i++)
             {
                 var daysBack = rng.Next(1, 180);
@@ -109,45 +133,9 @@ public class MigrationSeedReportData : IMigration
         }
         catch (Exception ex)
         {
-            logService.LogError(ex, "UpgradeProcess - MigrationSeedReportData");
+            logService.LogError(ex, "UpgradeProcess - MigrationSeedReportDataV2");
         }
 
         return true;
-    }
-
-    private static List<Product> EnsureProducts(
-        IRepository<Product> productRepository,
-        List<Category> categories,
-        List<Vendor> vendors)
-    {
-        var existing = productRepository.Table
-            .Where(p => p.Published && p.Price > 0)
-            .Take(20).ToList();
-
-        // Assign categories and vendors to existing products that lack them
-        foreach (var product in existing)
-        {
-            var changed = false;
-
-            if (!product.ProductCategories.Any() && categories.Any())
-            {
-                product.ProductCategories.Add(new ProductCategory {
-                    CategoryId = categories[Math.Abs(product.Id.GetHashCode()) % categories.Count].Id,
-                    DisplayOrder = 1
-                });
-                changed = true;
-            }
-
-            if (string.IsNullOrEmpty(product.VendorId) && vendors.Any())
-            {
-                product.VendorId = vendors[Math.Abs(product.Id.GetHashCode()) % vendors.Count].Id;
-                changed = true;
-            }
-
-            if (changed)
-                productRepository.Update(product);
-        }
-
-        return existing.Any() ? existing : new List<Product>();
     }
 }

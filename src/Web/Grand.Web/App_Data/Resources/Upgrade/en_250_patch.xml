@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Language Name="English">
+	<Resource Name="Admin.Reports.CategoryRevenue.RunReport" Area="Admin">
+		<Value>Run Report</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.RunReport" Area="Admin">
+		<Value>Run Report</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.GroupBy.Day" Area="Admin">
+		<Value>Day</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.GroupBy.Week" Area="Admin">
+		<Value>Week</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.GroupBy.Month" Area="Admin">
+		<Value>Month</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.RunReport" Area="Admin">
+		<Value>Run Report</Value>
+	</Resource>
+</Language>
