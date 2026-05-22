@@ -3,6 +3,9 @@ using Grand.Domain.Payments;
 
 namespace Grand.Business.Core.Interfaces.System.Reports;
 
+/// <summary>
+///     Vendor report service interface
+/// </summary>
 public interface IVendorReportService
 {
     /// <summary>

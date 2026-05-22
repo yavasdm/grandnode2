@@ -1,4 +1,3 @@
-using Grand.Business.Core.Enums;
 using Grand.Business.Core.Utilities.System;
 using Grand.Domain;
 using Grand.Domain.Catalog;
