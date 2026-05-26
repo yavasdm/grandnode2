@@ -1,13 +1,13 @@
 ﻿using Grand.Business.Core.Interfaces.Common.Security;
 using Grand.Business.Core.Interfaces.Storage;
-using Grand.Domain.Permissions;
 using Grand.Domain.Common;
 using Grand.Domain.Media;
+using Grand.Domain.Permissions;
+using Grand.SharedKernel.Extensions;
 using Grand.Web.Common.Extensions;
 using Grand.Web.Common.Security.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
-using Grand.SharedKernel.Extensions;
 
 namespace Grand.Web.Admin.Controllers;
 
@@ -32,17 +32,19 @@ public class PictureController : BaseAdminController
         _mediaSettings = mediaSettings;
     }
 
-    [HttpPost]   
+    [HttpPost]
     public virtual async Task<IActionResult> AsyncUpload(IFormFile file, Reference reference = Reference.None, string objectId = "")
     {
         if (file == null)
-            return Json(new {
+            return Json(new
+            {
                 success = false,
                 message = "No file uploaded",
                 downloadGuid = Guid.Empty
             });
         if (reference != Reference.None && string.IsNullOrEmpty(objectId))
-            return Json(new {
+            return Json(new
+            {
                 success = false,
                 message = "Please save form before upload new picture",
                 downloadGuid = Guid.Empty
@@ -51,7 +53,8 @@ public class PictureController : BaseAdminController
         var fileName = Path.GetFileName(file.FileName);
         var contentType = file.ContentType;
         if (!FileExtensions.GetAllowedMediaFileTypes(_mediaSettings.AllowedFileTypes).IsAllowedMediaFileType(Path.GetExtension(fileName)))
-            return Json(new {
+            return Json(new
+            {
                 success = false,
                 pictureId = "",
                 imageUrl = ""
@@ -65,21 +68,23 @@ public class PictureController : BaseAdminController
                 objectId: objectId);
         //when returning JSON the mime-type must be set to text/plain
         //otherwise some browsers will pop-up a "Save As" dialog.
-        return Json(new {
+        return Json(new
+        {
             success = true,
             pictureId = picture.Id,
             imageUrl = await _pictureService.GetPictureUrl(picture, 100)
         });
     }
 
-    [HttpPost]   
+    [HttpPost]
     public virtual async Task<IActionResult> AsyncLogoUpload(IFormFile file)
     {
         if (!await _permissionService.Authorize(StandardPermission.ManageSettings))
             return Content("Access denied");
 
         if (file == null)
-            return Json(new {
+            return Json(new
+            {
                 success = false,
                 message = "No file uploaded"
             });
@@ -87,7 +92,8 @@ public class PictureController : BaseAdminController
         var fileName = Path.GetFileName(file.FileName);
         var contentType = file.ContentType;
         if (!FileExtensions.GetAllowedMediaFileTypes(_mediaSettings.AllowedFileTypes).IsAllowedMediaFileType(Path.GetExtension(fileName)))
-            return Json(new {
+            return Json(new
+            {
                 success = false,
                 message = "File no allowed"
             });
@@ -95,7 +101,8 @@ public class PictureController : BaseAdminController
         if (string.IsNullOrEmpty(contentType))
             _ = new FileExtensionContentTypeProvider().TryGetContentType(fileName, out contentType);
         if (string.IsNullOrEmpty(contentType))
-            return Json(new {
+            return Json(new
+            {
                 success = false,
                 message = "Unknown content type"
             });
@@ -113,20 +120,23 @@ public class PictureController : BaseAdminController
                         await file.CopyToAsync(stream);
                     }
 
-                    return Json(new {
+                    return Json(new
+                    {
                         success = true,
                         imageUrl = fileName
                     });
                 }
 
-                return Json(new {
+                return Json(new
+                {
                     success = false,
                     message = "Physical path not exist"
                 });
             }
             catch (Exception ex)
             {
-                return Json(new {
+                return Json(new
+                {
                     success = false,
                     message = ex.Message
                 });
@@ -142,13 +152,15 @@ public class PictureController : BaseAdminController
                     await file.CopyToAsync(stream);
                 }
 
-                return Json(new {
+                return Json(new
+                {
                     success = true,
                     imageUrl = fileName
                 });
             }
 
-            return Json(new {
+            return Json(new
+            {
                 success = false,
                 message = "Physical path not exist"
             });

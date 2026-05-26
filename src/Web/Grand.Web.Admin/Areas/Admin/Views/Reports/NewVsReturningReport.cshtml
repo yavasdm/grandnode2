@@ -1,0 +1,113 @@
+@model NewVsReturningReportModel
+@{
+    ViewBag.Title = Loc["Admin.Reports.NewVsReturning"];
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="x_panel light form-fit popup-window">
+            <div class="x_title">
+                <div class="caption level-caption">
+                    <i class="fa fa-list-alt"></i>
+                    @Loc["Admin.Reports.NewVsReturning"]
+                </div>
+            </div>
+            <div class="x_content form">
+                <div class="form-horizontal">
+                    <div class="form-body">
+                        <div class="x_content">
+                            <div class="form-horizontal">
+                                <div class="form-body">
+                                    <div class="main-header col-12 px-0">
+                                        <div class="row align-items-end">
+                                            <div class="col-md-3 col-ms-12 col-12">
+                                                <div class="form-group mb-0">
+                                                    <admin-label asp-for="StartDate" class="control-label"/>
+                                                    <admin-input asp-for="StartDate"/>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 col-ms-12 col-12">
+                                                <div class="form-group mb-0">
+                                                    <admin-label asp-for="EndDate" class="control-label"/>
+                                                    <admin-input asp-for="EndDate"/>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 col-ms-12 col-12">
+                                                <div class="form-group mb-0">
+                                                    <admin-label asp-for="GroupById" class="control-label"/>
+                                                    <admin-select asp-for="GroupById" asp-items="Model.AvailableGroupByOptions"/>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 col-ms-12 col-12">
+                                                <div class="form-group mb-0">
+                                                    <admin-label asp-for="StoreId" class="control-label"/>
+                                                    <admin-select asp-for="StoreId" asp-items="Model.AvailableStores"/>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 col-sm-12 col-12">
+                                                <div class="form-actions">
+                                                    <button class="btn btn-success filter-submit" id="search-newvsreturning">
+                                                        <i class="fa fa-search"></i> @Loc["Admin.Reports.NewVsReturning.RunReport"]
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="x_content">
+                                    <div id="newvsreturning-grid"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#newvsreturning-grid").kendoGrid({
+            dataSource: {
+                transport: {
+                    read: {
+                        url: "@Html.Raw(Url.Action("NewVsReturningReportList", "Reports", new { area = Constants.AreaAdmin }))",
+                        type: "POST",
+                        dataType: "json",
+                        data: additionalData
+                    }
+                },
+                schema: { data: "Data", total: "Total", errors: "Errors" },
+                error: function(e) { display_kendoui_grid_error(e); this.cancelChanges(); },
+                serverPaging: true,
+                serverFiltering: true,
+                serverSorting: true
+            },
+            pageable: { refresh: true, numeric: false, previousNext: false, info: false },
+            scrollable: false,
+            columns: [
+                { field: "TimePeriod", title: "@Loc["Admin.Reports.NewVsReturning.Fields.TimePeriod"]" },
+                { field: "NewCustomers", title: "@Loc["Admin.Reports.NewVsReturning.Fields.NewCustomers"]" },
+                { field: "ReturningCustomers", title: "@Loc["Admin.Reports.NewVsReturning.Fields.ReturningCustomers"]" },
+                { field: "NewPercent", title: "@Loc["Admin.Reports.NewVsReturning.Fields.NewPercent"]" }
+            ]
+        });
+
+        $('#search-newvsreturning').click(function () {
+            $('#newvsreturning-grid').data('kendoGrid').dataSource.read();
+            return false;
+        });
+    });
+
+    function additionalData() {
+        var data = {
+            StartDate: $('#@Html.IdFor(model => model.StartDate)').val(),
+            EndDate: $('#@Html.IdFor(model => model.EndDate)').val(),
+            GroupById: $('#GroupById').val(),
+            StoreId: $('#StoreId').val()
+        };
+        addAntiForgeryToken(data);
+        return data;
+    }
+</script>

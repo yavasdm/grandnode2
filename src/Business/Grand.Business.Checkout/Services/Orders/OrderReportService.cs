@@ -572,5 +572,71 @@ public class OrderReportService : IOrderReportService
         public double Amount { get; set; }
     }
 
+    /// <inheritdoc />
+    public virtual async Task<IList<CategoryRevenueReportLine>> GetCategoryRevenueReport(
+        string storeId = "",
+        DateTime? startTimeUtc = null,
+        DateTime? endTimeUtc = null,
+        int? os = null,
+        PaymentStatus? ps = null)
+    {
+        var query = from p in _orderRepository.Table select p;
+        query = query.Where(o => !o.Deleted);
+        if (!string.IsNullOrEmpty(storeId))
+            query = query.Where(o => o.StoreId == storeId);
+        if (os.HasValue)
+            query = query.Where(o => o.OrderStatusId == os.Value);
+        if (ps.HasValue)
+            query = query.Where(o => o.PaymentStatusId == ps.Value);
+        if (startTimeUtc.HasValue)
+            query = query.Where(o => startTimeUtc.Value <= o.CreatedOnUtc);
+        if (endTimeUtc.HasValue)
+            query = query.Where(o => endTimeUtc.Value >= o.CreatedOnUtc);
+
+        var orderItems = (from order in query
+            from item in order.OrderItems
+            select new { item.ProductId, item.PriceExclTax, OrderId = order.Id })
+            .ToList();
+
+        if (!orderItems.Any())
+            return new List<CategoryRevenueReportLine>();
+
+        var productIds = orderItems.Select(x => x.ProductId).Distinct().ToList();
+        var products = (from p in _productRepository.Table
+            where productIds.Contains(p.Id)
+            select new { p.Id, p.ProductCategories })
+            .ToList();
+
+        var productCategoryMap = products
+            .GroupBy(p => p.Id)
+            .ToDictionary(
+                g => g.Key,
+                g => (IList<string>)g.First().ProductCategories.Select(c => c.CategoryId).ToList());
+
+        var categoryRevenue = new Dictionary<string, (double Revenue, HashSet<string> OrderIds)>();
+        foreach (var item in orderItems)
+        {
+            if (!productCategoryMap.TryGetValue(item.ProductId, out var categoryIds))
+                continue;
+            foreach (var categoryId in categoryIds)
+            {
+                if (!categoryRevenue.ContainsKey(categoryId))
+                    categoryRevenue[categoryId] = (0, new HashSet<string>());
+                var current = categoryRevenue[categoryId];
+                categoryRevenue[categoryId] = (current.Revenue + item.PriceExclTax, current.OrderIds);
+                current.OrderIds.Add(item.OrderId);
+            }
+        }
+
+        return await Task.FromResult(categoryRevenue
+            .Select(kvp => new CategoryRevenueReportLine {
+                CategoryId = kvp.Key,
+                TotalRevenue = kvp.Value.Revenue,
+                TotalOrders = kvp.Value.OrderIds.Count
+            })
+            .OrderByDescending(x => x.TotalRevenue)
+            .ToList());
+    }
+
     #endregion
 }

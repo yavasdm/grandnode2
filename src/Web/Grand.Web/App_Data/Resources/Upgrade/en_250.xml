@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Language Name="English">
+	<Resource Name="Admin.Reports.CategoryRevenue" Area="Admin">
+		<Value>Category Revenue</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.RunReport" Area="Admin">
+		<Value>Run Report</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.StartDate" Area="Admin">
+		<Value>Start Date</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.EndDate" Area="Admin">
+		<Value>End Date</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.OrderStatus" Area="Admin">
+		<Value>Order Status</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.PaymentStatus" Area="Admin">
+		<Value>Payment Status</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.Store" Area="Admin">
+		<Value>Store</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.Fields.CategoryName" Area="Admin">
+		<Value>Category</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.Fields.TotalOrders" Area="Admin">
+		<Value>Orders</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.Fields.TotalRevenue" Area="Admin">
+		<Value>Revenue</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.CategoryRevenue.Fields.RevenuePercent" Area="Admin">
+		<Value>% of Total</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning" Area="Admin">
+		<Value>New vs. Returning Customers</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.StartDate" Area="Admin">
+		<Value>Start Date</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.EndDate" Area="Admin">
+		<Value>End Date</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.GroupBy" Area="Admin">
+		<Value>Group By</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.GroupBy.Day" Area="Admin">
+		<Value>Day</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.GroupBy.Week" Area="Admin">
+		<Value>Week</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.GroupBy.Month" Area="Admin">
+		<Value>Month</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.RunReport" Area="Admin">
+		<Value>Run Report</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.Store" Area="Admin">
+		<Value>Store</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.Fields.TimePeriod" Area="Admin">
+		<Value>Period</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.Fields.NewCustomers" Area="Admin">
+		<Value>New Customers</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.Fields.ReturningCustomers" Area="Admin">
+		<Value>Returning Customers</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.NewVsReturning.Fields.NewPercent" Area="Admin">
+		<Value>New %</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance" Area="Admin">
+		<Value>Vendor Performance</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.RunReport" Area="Admin">
+		<Value>Run Report</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.StartDate" Area="Admin">
+		<Value>Start Date</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.EndDate" Area="Admin">
+		<Value>End Date</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.OrderStatus" Area="Admin">
+		<Value>Order Status</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.PaymentStatus" Area="Admin">
+		<Value>Payment Status</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.Store" Area="Admin">
+		<Value>Store</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.Fields.VendorName" Area="Admin">
+		<Value>Vendor</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.Fields.TotalOrders" Area="Admin">
+		<Value>Orders</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.Fields.TotalRevenue" Area="Admin">
+		<Value>Revenue</Value>
+	</Resource>
+	<Resource Name="Admin.Reports.VendorPerformance.Fields.AverageOrderValue" Area="Admin">
+		<Value>Avg. Order Value</Value>
+	</Resource>
+</Language>

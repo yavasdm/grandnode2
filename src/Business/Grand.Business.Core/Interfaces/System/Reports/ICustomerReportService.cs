@@ -1,3 +1,4 @@
+using Grand.Business.Core.Enums;
 using Grand.Business.Core.Utilities.System;
 using Grand.Domain;
 using Grand.Domain.Payments;
@@ -45,4 +46,18 @@ public interface ICustomerReportService
     /// <returns>Result</returns>
     Task<IList<CustomerByTimeReportLine>> GetCustomerByTimeReport(string storeId, DateTime? startTimeUtc = null,
         DateTime? endTimeUtc = null);
+
+    /// <summary>
+    ///     Get new vs returning customers report
+    /// </summary>
+    /// <param name="storeId">Store identifier; "" to load all records</param>
+    /// <param name="startTimeUtc">Start date</param>
+    /// <param name="endTimeUtc">End date</param>
+    /// <param name="groupBy">Grouping period</param>
+    /// <returns>Result</returns>
+    Task<IList<NewVsReturningReportLine>> GetNewVsReturningReport(
+        string storeId = "",
+        DateTime? startTimeUtc = null,
+        DateTime? endTimeUtc = null,
+        ReportGroupBy groupBy = ReportGroupBy.Month);
 }

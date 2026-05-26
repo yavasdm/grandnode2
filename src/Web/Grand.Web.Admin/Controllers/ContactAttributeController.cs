@@ -1,8 +1,8 @@
 ﻿using Grand.Business.Core.Extensions;
 using Grand.Business.Core.Interfaces.Common.Localization;
 using Grand.Business.Core.Interfaces.Marketing.Contacts;
-using Grand.Domain.Permissions;
 using Grand.Domain.Catalog;
+using Grand.Domain.Permissions;
 using Grand.Web.AdminShared.Extensions.Mapping;
 using Grand.Web.AdminShared.Interfaces;
 using Grand.Web.AdminShared.Models.Messages;

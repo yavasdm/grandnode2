@@ -1,3 +1,4 @@
+using Grand.Business.Core.Enums;
 using Grand.Business.Core.Interfaces.Common.Directory;
 using Grand.Business.Core.Interfaces.System.Reports;
 using Grand.Business.Core.Utilities.System;
@@ -7,6 +8,7 @@ using Grand.Domain.Customers;
 using Grand.Domain.Orders;
 using Grand.Domain.Payments;
 using Grand.Domain.Shipping;
+using System.Globalization;
 
 namespace Grand.Business.Customers.Services;
 
@@ -236,6 +238,70 @@ public class CustomerReportService : ICustomerReportService
 
 
         return report.OrderBy(x => x.Time).ToList();
+    }
+
+    /// <inheritdoc />
+    public virtual async Task<IList<NewVsReturningReportLine>> GetNewVsReturningReport(
+        string storeId = "",
+        DateTime? startTimeUtc = null,
+        DateTime? endTimeUtc = null,
+        ReportGroupBy groupBy = ReportGroupBy.Month)
+    {
+        var query = from o in _orderRepository.Table select o;
+        query = query.Where(o => !o.Deleted);
+        query = query.Where(o => o.OrderStatusId != (int)OrderStatusSystem.Cancelled);
+        if (!string.IsNullOrEmpty(storeId))
+            query = query.Where(o => o.StoreId == storeId);
+        if (startTimeUtc.HasValue)
+            query = query.Where(o => startTimeUtc.Value <= o.CreatedOnUtc);
+        if (endTimeUtc.HasValue)
+            query = query.Where(o => endTimeUtc.Value >= o.CreatedOnUtc);
+
+        var ordersInPeriod = query
+            .Select(o => new { o.CustomerId, o.CreatedOnUtc })
+            .ToList();
+
+        if (!ordersInPeriod.Any())
+            return new List<NewVsReturningReportLine>();
+
+        // When startTimeUtc is null there is no period start, so all historical orders are prior
+        // history — every customer appears as "returning" and no customer will be "new".
+        // Customers who placed any order before the start of the period are "returning"
+        var priorQuery = from o in _orderRepository.Table select o;
+        priorQuery = priorQuery.Where(o => !o.Deleted);
+        priorQuery = priorQuery.Where(o => o.OrderStatusId != (int)OrderStatusSystem.Cancelled);
+        if (!string.IsNullOrEmpty(storeId))
+            priorQuery = priorQuery.Where(o => o.StoreId == storeId);
+        if (startTimeUtc.HasValue)
+            priorQuery = priorQuery.Where(o => o.CreatedOnUtc < startTimeUtc.Value);
+
+        var priorCustomerIds = new HashSet<string>(
+            priorQuery.Select(o => o.CustomerId).Distinct().ToList());
+
+        var result = ordersInPeriod
+            .GroupBy(o => GetPeriodKey(o.CreatedOnUtc, groupBy))
+            .OrderBy(g => g.Key)
+            .Select(g =>
+            {
+                var uniqueCustomers = g.Select(o => o.CustomerId).Distinct().ToList();
+                return new NewVsReturningReportLine {
+                    TimePeriod = g.Key,
+                    NewCustomers = uniqueCustomers.Count(cid => !priorCustomerIds.Contains(cid)),
+                    ReturningCustomers = uniqueCustomers.Count(cid => priorCustomerIds.Contains(cid))
+                };
+            })
+            .ToList();
+
+        return await Task.FromResult(result);
+    }
+
+    private static string GetPeriodKey(DateTime date, ReportGroupBy groupBy)
+    {
+        return groupBy switch {
+            ReportGroupBy.Day => date.ToString("yyyy-MM-dd"),
+            ReportGroupBy.Week => $"{ISOWeek.GetYear(date)}-W{ISOWeek.GetWeekOfYear(date):D2}",
+            _ => date.ToString("yyyy-MM")
+        };
     }
 
     #endregion

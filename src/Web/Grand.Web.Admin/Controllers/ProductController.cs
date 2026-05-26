@@ -1028,7 +1028,7 @@ public class ProductController : BaseAdminController
 
     #region Product pictures
 
-    [HttpPost]    
+    [HttpPost]
     public async Task<IActionResult> ProductPictureAdd(
         IFormFileCollection files,
         Reference reference, string objectId,
